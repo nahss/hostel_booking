@@ -155,13 +155,14 @@ module hostel_booking::hostel_booking {
         let room_id = &room.id;
         let memo = table::borrow<ID, RoomMemo>(&institution.memos, room_memo_id);
 
+        let student_id = object::uid_to_inner(&student.id);
         
         let student_fee = memo.student_fee;
         let semester_payment = memo.semester_payment;
         let booking_time = clock::timestamp_ms(clock);
         let booking_record = BookingRecord {
             id: object::new(ctx),
-            student_id: object::uid_to_inner(&student.id),
+            student_id:student_id ,
             room_id: object::uid_to_inner(room_id),
             student: student.student,
             institution: institution.institution,
@@ -180,6 +181,8 @@ module hostel_booking::hostel_booking {
         assert!(coin::value(&same_amount_to_pay) > 0, EInvalidCoin);
 
         transfer::public_transfer(amount_to_pay, institution.institution);
+
+        table::add<ID, u64>(&mut institution.student_fees, student_id, student_fee);
         
         // calculate total pay and deduct it from the student balance
         room.beds_available = room.beds_available - 1;
